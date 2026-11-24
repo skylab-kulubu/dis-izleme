@@ -1,0 +1,101 @@
+# SKY LAB hizmet listesi: dış denetim (izle.py) ve durum sayfası (durum.yildizskylab.com) YALNIZ bu dosyayı okur.
+# GitHub'da bu dosyayı düzenleyip kaydet; bir sonraki koşuda (en çok 15 dakika) hem denetim hem sayfa güncellenir.
+# Dosya bozuksa son geçerli liste kullanılmaya devam eder ve "[ALARM]" issue'su hatanın satırını söyler.
+#
+# Her hizmet "- kimlik:" ile başlar; alanlar iki boşluk daha içeride, "ad: değer" biçiminde:
+#   kimlik     zorunlu. Küçük harf, rakam, tire (ör. hesap). Geçmiş bu kimlikle tutulur: değiştirirsen çubuk sıfırdan başlar.
+#   ad         zorunlu. Sayfada görünen ad.
+#   grup       sayfadaki başlık (aynı gruptakiler birlikte). Yoksa "Hizmetler".
+#   sira       küçük olan önce (gruplar da en küçük sıralarına göre dizilir). Yoksa 100.
+#   gorunur    evet / hayır. "hayır" ise denetlenir ve alarm verir ama sayfada görünmez. Yoksa evet.
+#   aciklama   adın yanında küçük yazı (ör. alan adı). İsteğe bağlı.
+#   adres      zorunlu. Denetlenen https:// adresi (herkese açık, girişsiz; yönlendirme izlenmez).
+#   beklenen   kabul edilen HTTP durum kodları, ör. [200] ya da [200, 204]. Yoksa [200].
+#   metin      yanıtta geçmesi gereken metin (tek tırnak içinde yaz). İsteğe bağlı.
+#   yavas_ms   bundan uzun süren yanıt "Yavaş" sayılır (milisaniye). Yoksa 3000.
+# Yorum satırları # ile başlar. Değerde # ya da : geçiyorsa değeri tek tırnağa al.
+
+hizmetler:
+  - kimlik: site
+    ad: Ana site
+    grup: Web
+    sira: 10
+    aciklama: yildizskylab.com
+    adres: https://yildizskylab.com/
+    beklenen: [200]
+    yavas_ms: 3000
+
+  - kimlik: etkinlik
+    ad: Etkinlik ve bilet sayfaları
+    grup: Web
+    sira: 20
+    # Sayfaların okuduğu herkese açık etkinlik listesi.
+    adres: https://api.yildizskylab.com/v1/events
+    beklenen: [200]
+    yavas_ms: 2000
+
+  - kimlik: kisa
+    ad: Kısa bağlantılar
+    grup: Web
+    sira: 30
+    aciklama: skyl.app
+    # Kök adreste bağlantı yok: hizmet ayaktaysa core'un 404 yanıtı döner.
+    adres: https://skyl.app/
+    beklenen: [404]
+    metin: '"status":404'
+    yavas_ms: 2000
+
+  - kimlik: giris
+    ad: Giriş (e-skylab)
+    grup: Hesap
+    sira: 40
+    aciklama: e.yildizskylab.com
+    adres: https://e.yildizskylab.com/realms/e-skylab/.well-known/openid-configuration
+    beklenen: [200]
+    metin: '"issuer":"https://e.yildizskylab.com/realms/e-skylab"'
+    yavas_ms: 2000
+
+  - kimlik: hesap
+    ad: Hesap Merkezi
+    grup: Hesap
+    sira: 50
+    aciklama: my.yildizskylab.com
+    adres: https://my.yildizskylab.com/api/ready
+    beklenen: [200]
+    metin: '"status":"ready"'
+    yavas_ms: 2000
+
+  - kimlik: panel
+    ad: Yönetim paneli
+    grup: Uygulamalar
+    sira: 60
+    aciklama: admin.yildizskylab.com
+    adres: https://admin.yildizskylab.com/api/health
+    beklenen: [200]
+    yavas_ms: 2000
+
+  - kimlik: skymail
+    ad: SkyMail
+    grup: Uygulamalar
+    sira: 70
+    adres: https://api.yildizskylab.com/api/skymail/ready
+    beklenen: [200, 204]
+    yavas_ms: 2000
+
+  - kimlik: forms
+    ad: Forms
+    grup: Uygulamalar
+    sira: 80
+    aciklama: forms.yildizskylab.com
+    adres: https://forms.yildizskylab.com/
+    beklenen: [200]
+    yavas_ms: 3000
+
+  - kimlik: api
+    ad: API
+    grup: Altyapı
+    sira: 90
+    aciklama: api.yildizskylab.com
+    adres: https://api.yildizskylab.com/v1/ready
+    beklenen: [200, 204]
+    yavas_ms: 1500

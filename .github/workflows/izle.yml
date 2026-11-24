@@ -1,0 +1,107 @@
+name: izle
+
+# SKY LAB dış izleme: 15 dakikada bir, sunucu dışından HTTP + nabız değerlendirmesi; sorun olursa GitHub issue (e-posta).
+# Zamanlama saat başı yoğunluğundan kaçar (GitHub: "schedule" yoğunlukta gecikebilir, kuyruktakiler düşebilir). Düşen bir
+# koşu yalnız 15 dk gecikmedir; RTO 24 sa. Sunucudaki ters bekçi (skylab-dis-izleme-bekci) son başarılı koşu 6 saatten
+# eskiyse /ADMIN'e sunucunun kendi yolundan mail atar.
+on:
+  schedule:
+    - cron: "7,22,37,52 * * * *"
+  workflow_dispatch:
+    inputs:
+      deneme:
+        description: "Uyarı yolunu dene: [DENEME] issue'su açılıp hemen kapanır (anılan kişilere e-posta gider)"
+        type: boolean
+        default: false
+
+permissions: {}   # her iş yalnız kendi ihtiyacını alır
+
+concurrency:
+  group: izle
+  cancel-in-progress: false
+
+jobs:
+  izle:
+    runs-on: ubuntu-24.04
+    # Denetimler paralel ve toplam 240 sn ile sınırlı (izle.py ZAMAN["butce"]); sunucu tümden düşse de iş birkaç dakikada
+    # biter ve issue açılır. 20 dk yalnız son güvence.
+    timeout-minutes: 20
+    permissions:
+      contents: read   # checkout ve önceki veri
+      issues: write    # alarm issue'su; olay/bakım issue'larını okumak
+    outputs:
+      yayinla: ${{ steps.izle.outputs.yayinla }}
+      canlilik: ${{ steps.izle.outputs.canlilik }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      # Veri dalı okunamazsa (ağ, kimlik, bozuk durum.json) denetim ve alarm yine koşar; geçmiş/veri dalı ve sayfa yazılmaz
+      # (izle.py yayinla=hayir), iş sonunda kırmızı biter (GitHub'ın başarısız iş e-postası). Dal yoksa ilk koşudur.
+      - name: Önceki durum (veri dalı)
+        run: bash veri-oku.sh || echo "GECMIS_OKUNAMADI=1" >>"$GITHUB_ENV"
+      - id: izle
+        name: Denetle, uyar, sayfa verisini hazırla
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          UYARI_KISILERI: ${{ vars.UYARI_KISILERI }}
+          NABIZ_URL: ${{ vars.NABIZ_URL }}
+          DENEME: ${{ inputs.deneme }}
+          ONCEKI_DURUM: veri/durum.json
+          GECMIS_OKUNAMADI: ${{ env.GECMIS_OKUNAMADI }}
+          CIKTI_DIR: cikti
+        run: python3 -I izle.py
+      - if: steps.izle.outputs.yayinla == 'evet'
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: veri
+          path: cikti/
+          retention-days: 1
+
+  yayin:
+    # Durum sayfasının verisi "veri" dalına: yalnız durum değişince, olay/hizmet listesi değişince ya da saatte bir.
+    # contents:write yalnız bu işte ve canlilik'te; burada betik koşmaz, yalnız git.
+    needs: izle
+    if: needs.izle.outputs.yayinla == 'evet'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: veri
+          path: yeni
+      - name: veri dalına yaz
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -eu
+          git init -q d && cd d
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git remote add origin "https://x-access-token:${GH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git"
+          if git fetch -q --depth=1 origin veri; then git checkout -q -B veri FETCH_HEAD; else git checkout -q --orphan veri; fi
+          cp ../yeni/durum.json ../yeni/sayfa.json ../yeni/olaylar.xml .
+          printf '%s\n' "Durum sayfası verisi (izle.py yazar; elle düzenleme). Sayfa: https://durum.yildizskylab.com" > README.md
+          git add -A
+          if git diff --cached --quiet; then echo "değişiklik yok"; exit 0; fi
+          git commit -q -m "veri: $(date -u +%Y-%m-%dT%H:%MZ)"
+          git push -q origin HEAD:veri
+
+  canlilik:
+    # 60 gün etkinliksiz açık depoda zamanlama kapanır: 40 günde bir main'e boş commit.
+    needs: izle
+    if: needs.izle.outputs.canlilik == 'evet'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Canlılık commit'i
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git commit --allow-empty -m "izle: canlılık (zamanlama 60 gün etkinliksiz kalmasın)"
+          git push

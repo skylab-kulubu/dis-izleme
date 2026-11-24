@@ -1,0 +1,27 @@
+{
+  "surum": 1,
+  "_aciklama": "Sunucudaki zamanlanmış işlerin nabız sınırları (sayfada görünmez). Denetlenen web hizmetleri hizmetler.yml dosyasında.",
+  "nabiz_url": "https://nabiz.yildizskylab.com",
+  "sertifika_en_az_gun": 14,
+  "nabiz": {
+    "skylab-db-backup":                {"en_cok_saat": 28,  "hata_bekle_dk": 0},
+    "skylab-db-backup-watch":          {"en_cok_saat": 26,  "hata_bekle_dk": 0},
+    "skylab-openbao-snapshot":         {"en_cok_saat": 28,  "hata_bekle_dk": 0},
+    "skylab-openbao-snapshot-watch":   {"en_cok_saat": 26,  "hata_bekle_dk": 0},
+    "openbao-rotate":                  {"en_cok_saat": 28,  "hata_bekle_dk": 0},
+    "openbao-rotate-weekly":           {"en_cok_saat": 171, "hata_bekle_dk": 0},
+    "openbao-provider-tokens":         {"en_cok_saat": 14,  "hata_bekle_dk": 0},
+    "skylab-erisim-kaydi":             {"en_cok_saat": 28,  "hata_bekle_dk": 0},
+    "skylab-erisim-kaydi-bekci":       {"en_cok_saat": 3,   "hata_bekle_dk": 75},
+    "skylab-retention-alarm":          {"en_cok_saat": 3,   "hata_bekle_dk": 75},
+    "skylab-erasure-alarm":            {"en_cok_saat": 3,   "hata_bekle_dk": 75},
+    "skylab-skymail-mask-alarm":       {"en_cok_saat": 3,   "hata_bekle_dk": 75},
+    "skylab-keycloak-acil-izle":       {"en_cok_saat": 6,   "hata_bekle_dk": 30},
+    "skylab-keycloak-alarm-bekci":     {"en_cok_saat": 14,  "hata_bekle_dk": 0},
+    "skylab-keycloak-sapma-alarm":     {"en_cok_saat": 27,  "hata_bekle_dk": 0},
+    "skylab-rabbitmq-watch":           {"en_cok_saat": 2,   "hata_bekle_dk": 35},
+    "skylab-rabbitmq-watch-weekly":    {"en_cok_saat": 171, "hata_bekle_dk": 0},
+    "skylab-dis-izleme-bekci":         {"en_cok_saat": 14,  "hata_bekle_dk": 0}
+  },
+  "varsayilan_nabiz": {"en_cok_saat": 26, "hata_bekle_dk": 0}
+}

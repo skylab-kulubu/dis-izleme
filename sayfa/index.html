@@ -1,0 +1,329 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SKY LAB Durum</title>
+<meta name="description" content="SKY LAB hizmetlerinin anlık durumu, son 90 günün çalışma süresi ve olay geçmişi.">
+<link rel="alternate" type="application/rss+xml" title="SKY LAB Durum: olaylar ve bakımlar" href="/olaylar.xml">
+<link rel="preload" href="/fonts/space-grotesk-latin-400-normal.woff2" as="font" type="font/woff2" crossorigin>
+<!-- Kaynak: skylab-kulubu/dis-izleme sayfa/. Veri /sayfa.json (izle.py, 15 dakikada bir; durum değişince hemen yayımlanır).
+     Renkler ve yazı tipi skylcn-ui tokens.css'ten. -->
+<style>
+/* Yazı tipleri bu sitede barınır (dış istek yok): @fontsource/space-grotesk ve space-mono 5.3.0, OFL-1.1. */
+@font-face { font-family: 'Space Grotesk'; font-style: normal; font-weight: 400; font-display: swap; src: url(/fonts/space-grotesk-latin-ext-400-normal.woff2) format('woff2'); unicode-range: U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+0304,U+0308,U+0329,U+1D00-1DBF,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C0,U+2113,U+2C60-2C7F,U+A720-A7FF; }
+@font-face { font-family: 'Space Grotesk'; font-style: normal; font-weight: 400; font-display: swap; src: url(/fonts/space-grotesk-latin-400-normal.woff2) format('woff2'); unicode-range: U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD; }
+@font-face { font-family: 'Space Grotesk'; font-style: normal; font-weight: 500; font-display: swap; src: url(/fonts/space-grotesk-latin-ext-500-normal.woff2) format('woff2'); unicode-range: U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+0304,U+0308,U+0329,U+1D00-1DBF,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C0,U+2113,U+2C60-2C7F,U+A720-A7FF; }
+@font-face { font-family: 'Space Grotesk'; font-style: normal; font-weight: 500; font-display: swap; src: url(/fonts/space-grotesk-latin-500-normal.woff2) format('woff2'); unicode-range: U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD; }
+@font-face { font-family: 'Space Grotesk'; font-style: normal; font-weight: 600; font-display: swap; src: url(/fonts/space-grotesk-latin-ext-600-normal.woff2) format('woff2'); unicode-range: U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+0304,U+0308,U+0329,U+1D00-1DBF,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C0,U+2113,U+2C60-2C7F,U+A720-A7FF; }
+@font-face { font-family: 'Space Grotesk'; font-style: normal; font-weight: 600; font-display: swap; src: url(/fonts/space-grotesk-latin-600-normal.woff2) format('woff2'); unicode-range: U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD; }
+@font-face { font-family: 'Space Mono'; font-style: normal; font-weight: 400; font-display: swap; src: url(/fonts/space-mono-latin-ext-400-normal.woff2) format('woff2'); unicode-range: U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+0304,U+0308,U+0329,U+1D00-1DBF,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C0,U+2113,U+2C60-2C7F,U+A720-A7FF; }
+@font-face { font-family: 'Space Mono'; font-style: normal; font-weight: 400; font-display: swap; src: url(/fonts/space-mono-latin-400-normal.woff2) format('woff2'); unicode-range: U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD; }
+
+/* skylcn-ui tokens.css'ten alınan alt küme. Koyu varsayılan; data-theme="light" açık. */
+:root, [data-theme='dark'] {
+  color-scheme: dark;
+  --background: #171717;
+  --sheet: #121212;
+  --card: #1e1e1e;
+  --popover: #2a2a2a;
+  --foreground: #f5f5f5;
+  --foreground-strong: #fafafa;
+  --muted-foreground: #a3a3a3;
+  --subtle-foreground: #8c8c8c;
+  --border: rgb(255 255 255 / 10%);
+  --border-subtle: rgb(255 255 255 / 5%);
+  --border-strong: rgb(255 255 255 / 20%);
+  --accent: rgb(255 255 255 / 5%);
+  --primary: #e0c8e5;
+  --ring: rgb(235 213 238 / 60%);
+  --ok: #34d399;
+  --yavas: #fbbf24;
+  --kesinti: #f87171;
+  --bakim: #93c5fd;
+  --veriyok: #404040;
+  --elevation-overlay: 0 20px 40px -12px rgb(0 0 0 / 60%);
+}
+[data-theme='light'] {
+  color-scheme: light;
+  --background: #f6f4f1;
+  --sheet: #ffffff;
+  --card: #ffffff;
+  --popover: #ffffff;
+  --foreground: #1c1a18;
+  --foreground-strong: #121014;
+  --muted-foreground: #57524c;
+  --subtle-foreground: #6b665f;
+  --border: rgb(0 0 0 / 10%);
+  --border-subtle: rgb(0 0 0 / 6%);
+  --border-strong: rgb(0 0 0 / 18%);
+  --accent: rgb(0 0 0 / 5%);
+  --primary: #8f5e98;
+  --ring: rgb(117 68 127);
+  --ok: #036648;
+  --yavas: #a44a07;
+  --kesinti: #b91c1c;
+  --bakim: #1d4ed8;
+  --veriyok: #d6d1cb;
+  --elevation-overlay: 0 20px 40px -16px rgb(28 26 24 / 25%);
+}
+@media (prefers-color-scheme: light) {
+  :root:not([data-theme='dark']) {
+    color-scheme: light;
+    --background: #f6f4f1; --sheet: #ffffff; --card: #ffffff; --popover: #ffffff;
+    --foreground: #1c1a18; --foreground-strong: #121014; --muted-foreground: #57524c; --subtle-foreground: #6b665f;
+    --border: rgb(0 0 0 / 10%); --border-subtle: rgb(0 0 0 / 6%); --border-strong: rgb(0 0 0 / 18%);
+    --accent: rgb(0 0 0 / 5%); --primary: #8f5e98; --ring: rgb(117 68 127);
+    --ok: #036648; --yavas: #a44a07; --kesinti: #b91c1c; --bakim: #1d4ed8; --veriyok: #d6d1cb;
+    --elevation-overlay: 0 20px 40px -16px rgb(28 26 24 / 25%);
+  }
+}
+:root {
+  --font-sans: 'Space Grotesk', ui-sans-serif, system-ui, -apple-system, sans-serif;
+  --font-mono: 'Space Mono', ui-monospace, SFMono-Regular, monospace;
+  --radius: 0.5rem;
+  --label-spacing: 0.18em;
+}
+
+* { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+body {
+  margin: 0;
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-sans);
+  font-size: 15px;
+  line-height: 1.55;
+}
+a { color: var(--primary); text-underline-offset: 3px; }
+a:hover { text-decoration-thickness: 2px; }
+:focus-visible { outline: 2px solid var(--ring); outline-offset: 2px; border-radius: 4px; }
+.gizli { position: absolute !important; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }
+.atla { position: absolute; left: 16px; top: -40px; background: var(--card); color: var(--foreground); padding: 8px 12px; border-radius: var(--radius); z-index: 10; }
+.atla:focus { top: 12px; }
+
+.kap { max-width: 880px; margin: 0 auto; padding: 0 16px; }
+
+header.ust { border-bottom: 1px solid var(--border); background: var(--sheet); }
+header.ust .kap { display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 64px; }
+.marka { display: flex; align-items: baseline; gap: 10px; text-decoration: none; color: var(--foreground-strong); }
+.marka b { font-family: var(--font-mono); font-weight: 400; letter-spacing: var(--label-spacing); font-size: 14px; }
+.marka span { color: var(--muted-foreground); font-size: 14px; }
+.ust-sag { display: flex; align-items: center; gap: 8px; }
+.dugme {
+  display: inline-flex; align-items: center; gap: 6px; min-height: 36px; padding: 0 12px;
+  border: 1px solid var(--border-strong); border-radius: var(--radius); background: transparent;
+  color: var(--foreground); font: inherit; font-size: 14px; text-decoration: none; cursor: pointer;
+}
+.dugme:hover { background: var(--accent); }
+.dugme svg { width: 16px; height: 16px; flex: none; }
+
+.uyari-satir { margin: 16px 0 0; padding: 10px 14px; border: 1px solid var(--border-strong); border-radius: var(--radius); font-size: 14px; color: var(--muted-foreground); }
+.grup-ad { margin: 0; padding: 12px 20px 0; font-family: var(--font-mono); font-weight: 400; font-size: 12px; letter-spacing: var(--label-spacing); text-transform: uppercase; color: var(--subtle-foreground); }
+.grup + .grup { border-top: 1px solid var(--border); }
+.hizmet:first-child { border-top: 0; }
+.bekle { padding: 20px; color: var(--muted-foreground); }
+
+.genel {
+  display: flex; gap: 14px; align-items: flex-start; margin: 16px 0 0; padding: 18px 20px;
+  border: 1px solid var(--border); border-left: 4px solid var(--durum-renk, var(--ok));
+  border-radius: var(--radius); background: var(--card);
+}
+.genel .simge { width: 24px; height: 24px; color: var(--durum-renk, var(--ok)); flex: none; margin-top: 1px; }
+.genel h1 { margin: 0; font-size: 20px; font-weight: 600; line-height: 1.35; color: var(--foreground-strong); }
+.genel p { margin: 4px 0 0; color: var(--muted-foreground); font-size: 14px; }
+
+section { margin-top: 40px; }
+h2 {
+  margin: 0 0 12px; font-family: var(--font-mono); font-weight: 400; font-size: 12px;
+  letter-spacing: var(--label-spacing); text-transform: uppercase; color: var(--muted-foreground);
+}
+.kart { border: 1px solid var(--border); border-radius: var(--radius); background: var(--card); }
+
+/* Planlı bakım */
+.bakim { padding: 18px 20px; }
+.bakim-bas { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 8px 16px; align-items: baseline; }
+.bakim h3, .olay h3 { margin: 0; font-size: 16px; font-weight: 600; color: var(--foreground-strong); }
+.etiket {
+  display: inline-flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 500; color: var(--durum-renk);
+}
+.etiket svg { width: 16px; height: 16px; flex: none; }
+.meta { color: var(--muted-foreground); font-size: 14px; margin: 4px 0 0; }
+.etkilenen { margin: 8px 0 0; font-size: 14px; }
+
+/* Zaman çizelgesi (olay güncellemeleri) */
+ol.cizelge { list-style: none; margin: 14px 0 0; padding: 0; }
+ol.cizelge li { position: relative; padding: 0 0 14px 22px; }
+ol.cizelge li:last-child { padding-bottom: 0; }
+ol.cizelge li::before {
+  content: ""; position: absolute; left: 4px; top: 8px; width: 7px; height: 7px; border-radius: 50%;
+  background: var(--border-strong);
+}
+ol.cizelge li::after {
+  content: ""; position: absolute; left: 7px; top: 19px; bottom: 0; width: 1px; background: var(--border);
+}
+ol.cizelge li:last-child::after { display: none; }
+ol.cizelge .asama { font-weight: 600; font-size: 14px; color: var(--foreground-strong); }
+ol.cizelge time { color: var(--muted-foreground); font-size: 13px; margin-left: 8px; font-family: var(--font-mono); }
+ol.cizelge p { margin: 2px 0 0; font-size: 14px; }
+
+/* Hizmetler */
+.lejant { display: flex; flex-wrap: wrap; gap: 6px 16px; margin: 0 0 12px; padding: 0; list-style: none; font-size: 13px; color: var(--muted-foreground); }
+.lejant li { display: inline-flex; align-items: center; gap: 6px; }
+.lejant svg { width: 14px; height: 14px; }
+.hizmetler { list-style: none; margin: 0; padding: 0; }
+.hizmet { padding: 16px 20px 14px; border-top: 1px solid var(--border); }
+.hizmet:first-child { border-top: 0; }
+.hizmet-bas { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; flex-wrap: wrap; }
+.hizmet h3 { margin: 0; font-size: 15px; font-weight: 500; color: var(--foreground-strong); }
+.hizmet h3 small { font-weight: 400; color: var(--muted-foreground); font-size: 13px; margin-left: 6px; }
+
+.cubuk {
+  display: flex; gap: 2px; height: 34px; margin-top: 10px; padding: 2px; margin-left: -2px; margin-right: -2px;
+  border-radius: 4px; touch-action: manipulation;
+}
+.cubuk:focus-visible { outline-offset: 1px; }
+.gun { flex: 1 1 0; min-width: 0; border-radius: 2px; background: var(--ok); cursor: default; }
+.gun[data-d='yavas'] { background: var(--yavas); }
+.gun[data-d='kesinti'] { background: var(--kesinti); }
+.gun[data-d='bakim'] { background: var(--bakim); }
+.gun[data-d='veriyok'] { background: var(--veriyok); }
+.gun.secili { outline: 2px solid var(--foreground); outline-offset: 1px; }
+.cubuk-alt {
+  display: flex; justify-content: space-between; gap: 8px; margin-top: 6px;
+  font-size: 12px; color: var(--muted-foreground); font-family: var(--font-mono);
+}
+.cubuk-alt .yuzde { color: var(--foreground); }
+.ozet-satir { margin: 8px 0 0; font-size: 13px; color: var(--muted-foreground); }
+.ozet-satir b { font-weight: 500; color: var(--foreground); }
+.kisa30 { display: none; }
+
+.ipucu {
+  position: absolute; z-index: 50; pointer-events: none; max-width: 240px; padding: 10px 12px;
+  background: var(--popover); color: var(--foreground); border: 1px solid var(--border-strong);
+  border-radius: var(--radius); box-shadow: var(--elevation-overlay); font-size: 13px; line-height: 1.45;
+}
+.ipucu[hidden] { display: none; }
+.ipucu .t { font-weight: 600; color: var(--foreground-strong); }
+.ipucu .e { display: flex; align-items: center; gap: 6px; margin-top: 4px; color: var(--durum-renk); font-weight: 500; }
+.ipucu .e svg { width: 14px; height: 14px; }
+.ipucu .n { margin-top: 2px; color: var(--muted-foreground); }
+
+/* Olay geçmişi */
+.ay { margin-top: 20px; }
+.ay:first-of-type { margin-top: 0; }
+.ay h3.ay-ad { margin: 0 0 8px; font-size: 15px; font-weight: 500; color: var(--foreground-strong); padding-bottom: 6px; border-bottom: 1px solid var(--border); }
+.ay .bos { margin: 0; color: var(--muted-foreground); font-size: 14px; }
+.olay { padding: 18px 20px; }
+.olay + .olay { margin-top: 12px; }
+
+footer { margin: 56px 0 0; padding: 20px 0 40px; border-top: 1px solid var(--border); color: var(--muted-foreground); font-size: 13px; }
+footer p { margin: 0 0 6px; }
+
+/* Renk kodları */
+.ok { --durum-renk: var(--ok); }
+.yavas { --durum-renk: var(--yavas); }
+.kesinti { --durum-renk: var(--kesinti); }
+.bakim-r { --durum-renk: var(--bakim); }
+.veriyok { --durum-renk: var(--muted-foreground); }
+
+@media (max-width: 640px) {
+  body { font-size: 15px; }
+  .genel { padding: 16px; }
+  .genel h1 { font-size: 18px; }
+  .hizmet, .bakim, .olay { padding-left: 16px; padding-right: 16px; }
+  /* Dar ekranda son 30 gün (GitHub Status da böyle yapar); yüzde yine 90 günlük */
+  .gun:nth-child(-n+60) { display: none; }
+  .cubuk { gap: 3px; }
+  .kisa90 { display: none; }
+  .kisa30 { display: inline; }
+  .marka span { display: none; }
+  .dugme .yazi { display: none; }
+  .dugme { padding: 0 10px; }
+}
+@media (prefers-reduced-motion: no-preference) {
+  .dugme, .gun { transition: background-color .15s ease; }
+}
+</style>
+</head>
+<body>
+<a class="atla" href="#hizmetler">Hizmetlere geç</a>
+
+<header class="ust">
+  <div class="kap">
+    <a class="marka" href="/" aria-label="SKY LAB Durum, ana sayfa"><b>SKY LAB</b><span>Durum</span></a>
+    <div class="ust-sag">
+      <a class="dugme" href="/olaylar.xml" title="Olaylar ve bakımlar için RSS akışı">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 11a9 9 0 0 1 9 9"/><path d="M4 4a16 16 0 0 1 16 16"/><circle cx="5" cy="19" r="1.5" fill="currentColor"/></svg>
+        <span class="yazi">RSS</span><span class="gizli">RSS akışı</span>
+      </a>
+      <button class="dugme" type="button" id="tema">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 0 0 18z" fill="currentColor"/></svg>
+        <span class="yazi" id="tema-yazi">Açık tema</span>
+      </button>
+    </div>
+  </div>
+</header>
+
+<main class="kap">
+  <p class="uyari-satir" id="eski" hidden></p>
+
+  <div class="genel" id="genel" role="status">
+    <svg class="simge" id="genel-simge" aria-hidden="true"></svg>
+    <div>
+      <h1 id="genel-baslik">Durum yükleniyor…</h1>
+      <p id="genel-alt">Denetimler 15 dakikada bir yapılır.</p>
+    </div>
+  </div>
+
+  <section aria-labelledby="suren-b" id="suren-bolum" hidden>
+    <h2 id="suren-b">Süren olaylar</h2>
+    <div id="suren"></div>
+  </section>
+
+  <section aria-labelledby="bakim-b" id="bakim-bolum" hidden>
+    <h2 id="bakim-b">Planlı bakım</h2>
+    <div id="bakimlar"></div>
+  </section>
+
+  <section aria-labelledby="hizmetler-b" id="hizmetler">
+    <h2 id="hizmetler-b">Hizmetler</h2>
+    <ul class="lejant" aria-label="Renklerin anlamı">
+      <li class="ok"><svg style="color:var(--ok)" aria-hidden="true"><use href="#s-ok"/></svg>Çalışıyor</li>
+      <li class="yavas"><svg style="color:var(--yavas)" aria-hidden="true"><use href="#s-yavas"/></svg>Yavaş</li>
+      <li class="kesinti"><svg style="color:var(--kesinti)" aria-hidden="true"><use href="#s-kesinti"/></svg>Kesinti</li>
+      <li class="bakim-r"><svg style="color:var(--bakim)" aria-hidden="true"><use href="#s-bakim"/></svg>Bakımda</li>
+      <li><svg style="color:var(--muted-foreground)" aria-hidden="true"><use href="#s-veriyok"/></svg>Veri yok</li>
+    </ul>
+    <p class="gizli">Her hizmetin çubuğu son 90 günü gösterir; en sağdaki kutu bugündür. Çubuğa sekmeyle gelip sol ve sağ oklarla günleri gezebilirsiniz.</p>
+    <div class="kart" id="liste"><p class="bekle">Yükleniyor…</p></div>
+  </section>
+
+  <section aria-labelledby="gecmis-b">
+    <h2 id="gecmis-b">Olay geçmişi · son 90 gün</h2>
+    <div id="gecmis"></div>
+    <p class="ozet-satir">Yeni olayları <a href="/olaylar.xml">RSS akışından</a> izleyebilirsiniz.</p>
+  </section>
+
+  <footer>
+    <p>Bu sayfa SKY LAB sunucularından ayrı yerde barınır; sunucular kapalıyken de açılır.</p>
+    <p>Denetimler GitHub Actions'tan, tek noktadan yapılır. Yalnız Türkiye'den görülen bir sorun burada görünmeyebilir.</p>
+    <p>Çalışma yüzdesi 15 dakikalık denetimlerden hesaplanır; planlı bakım süresi hesaba katılmaz.</p>
+  </footer>
+</main>
+
+<div class="ipucu" id="ipucu" role="tooltip" hidden></div>
+<div class="gizli" aria-live="polite" id="duyuru"></div>
+
+<!-- Durum simgeleri: her durumun ayrı biçimi var, renk tek başına bilgi taşımaz -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="s-ok" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9.5"/><path d="m7.5 12.5 3 3 6-6.5"/></symbol>
+  <symbol id="s-yavas" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9.5"/><path d="M12 7v5.5l3.5 2"/></symbol>
+  <symbol id="s-kesinti" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2.8 22 20.5H2z"/><path d="M12 9.5v5"/><path d="M12 17.6v.1"/></symbol>
+  <symbol id="s-bakim" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="3"/><path d="M8 12h8"/><path d="M8 8h8"/><path d="M8 16h5"/></symbol>
+  <symbol id="s-veriyok" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-dasharray="3 3"><circle cx="12" cy="12" r="9.5"/></symbol>
+</svg>
+
+<script src="/sayfa.js"></script>
+</body>
+</html>

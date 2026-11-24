@@ -1,0 +1,31 @@
+# SKY LAB dış izleme: nabız deposu + durum sayfası (tek Worker). Bu bir ŞABLON: hesap, KV kimliği ve özet yayın sırasında
+# doldurulur (ops/wizards/dis-izleme-2026-11-24-wizard.sh --yayinla; doldurulmuş kopya depoya girmez). Hiçbiri sır değil:
+# hesap ve KV kimlikleri ad, özet sunucudaki belirtecin SHA-256 özeti (belirtecin kendisi sunucudan çıkmaz).
+# status.yildizskylab.com yönlendirmesi wizard tarafından yalnız o adda başka bir kayıt yoksa sona eklenir.
+name = "skylab-durum"
+account_id = "@@HESAP@@"
+main = "worker.js"
+compatibility_date = "2026-10-01"
+workers_dev = false
+preview_urls = false
+
+[assets]
+directory = "./sayfa"
+binding = "ASSETS"
+run_worker_first = true
+
+[[kv_namespaces]]
+binding = "NABIZ"
+id = "@@KV_ID@@"
+
+[vars]
+NABIZ_OZET = "@@OZET@@"
+VERI_KOK = "https://raw.githubusercontent.com/skylab-kulubu/dis-izleme/veri"
+
+[[routes]]
+pattern = "nabiz.yildizskylab.com"
+custom_domain = true
+
+[[routes]]
+pattern = "durum.yildizskylab.com"
+custom_domain = true
