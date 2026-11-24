@@ -1,4 +1,4 @@
-# SKY LAB hizmet listesi: dış denetim (izle.py) ve durum sayfası (durum.yildizskylab.com) YALNIZ bu dosyayı okur.
+# SKY LAB hizmet listesi: dış denetim (izle.py) ve durum sayfası (status.yildizskylab.com) YALNIZ bu dosyayı okur.
 # GitHub'da bu dosyayı düzenleyip kaydet; bir sonraki koşuda (en çok 15 dakika) hem denetim hem sayfa güncellenir.
 # Dosya bozuksa son geçerli liste kullanılmaya devam eder ve "[ALARM]" issue'su hatanın satırını söyler.
 #

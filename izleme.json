@@ -1,7 +1,7 @@
 {
   "surum": 1,
   "_aciklama": "Sunucudaki zamanlanmış işlerin nabız sınırları (sayfada görünmez). Denetlenen web hizmetleri hizmetler.yml dosyasında.",
-  "nabiz_url": "https://nabiz.yildizskylab.com",
+  "nabiz_url": "https://status.yildizskylab.com/heartbeat",
   "sertifika_en_az_gun": 14,
   "nabiz": {
     "skylab-db-backup":                {"en_cok_saat": 28,  "hata_bekle_dk": 0},

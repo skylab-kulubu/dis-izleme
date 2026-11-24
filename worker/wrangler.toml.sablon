@@ -1,7 +1,8 @@
-# SKY LAB dış izleme: nabız deposu + durum sayfası (tek Worker). Bu bir ŞABLON: hesap, KV kimliği ve özet yayın sırasında
-# doldurulur (ops/wizards/dis-izleme-2026-11-24-wizard.sh --yayinla; doldurulmuş kopya depoya girmez). Hiçbiri sır değil:
+# SKY LAB dış izleme: durum sayfası + nabız deposu (tek Worker). Bu bir ŞABLON: hesap, KV kimliği, özet ve geçiş adları yayın
+# sırasında doldurulur (ops/wizards/dis-izleme-2026-11-24-wizard.sh; doldurulmuş kopya depoya girmez). Hiçbiri sır değil:
 # hesap ve KV kimlikleri ad, özet sunucudaki belirtecin SHA-256 özeti (belirtecin kendisi sunucudan çıkmaz).
-# status.yildizskylab.com yönlendirmesi wizard tarafından yalnız o adda başka bir kayıt yoksa sona eklenir.
+# Asıl ad status.yildizskylab.com (sayfa + /heartbeat). Geçişte (--eski-sil'e kadar) wizard ESKI_ADLAR'a durum. ve nabiz.'yı
+# yazar ve iki adın rotasını sona ekler; --eski-sil değişkeni boşaltıp rotaları eklemeden yayımlar (Cloudflare iki adı kaldırır).
 name = "skylab-durum"
 account_id = "@@HESAP@@"
 main = "worker.js"
@@ -21,11 +22,8 @@ id = "@@KV_ID@@"
 [vars]
 NABIZ_OZET = "@@OZET@@"
 VERI_KOK = "https://raw.githubusercontent.com/skylab-kulubu/dis-izleme/veri"
+ESKI_ADLAR = "@@ESKI_ADLAR@@"
 
 [[routes]]
-pattern = "nabiz.yildizskylab.com"
-custom_domain = true
-
-[[routes]]
-pattern = "durum.yildizskylab.com"
+pattern = "status.yildizskylab.com"
 custom_domain = true

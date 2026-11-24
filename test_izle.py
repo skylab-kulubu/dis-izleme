@@ -317,7 +317,7 @@ class Olaylar(unittest.TestCase):
         dom = xml.dom.minidom.parseString(x.encode())
         self.assertEqual(len(dom.getElementsByTagName("item")), 1)
         self.assertIn("&lt;b&gt;", x)
-        self.assertIn("https://durum.yildizskylab.com/#olay-12", x)
+        self.assertIn("https://status.yildizskylab.com/#olay-12", x)
 
 
 class Gecmis(unittest.TestCase):
@@ -536,11 +536,42 @@ class Kisiler(unittest.TestCase):
 
 class Yapilandirma(unittest.TestCase):
     def test_izleme_json(self):
-        self.assertTrue(YAPI["nabiz_url"].startswith("https://"))
+        self.assertEqual(YAPI["nabiz_url"], "https://status.yildizskylab.com/heartbeat")
         self.assertNotIn("http", YAPI)
         for ad, v in YAPI["nabiz"].items():
             self.assertRegex(ad, r"^[a-z0-9][a-z0-9-]{0,62}$")
             self.assertNotIn("not", v)
+
+
+class NabizAdresi(unittest.TestCase):
+    """status. geçişi (2026-11-24): yeni taban …/heartbeat'in kendisi, eski taban nabiz. için /durum okunur."""
+
+    def test_yeni_ve_eski_taban(self):
+        self.assertEqual(izle.nabiz_oku_url("https://status.yildizskylab.com/heartbeat"), "https://status.yildizskylab.com/heartbeat")
+        self.assertEqual(izle.nabiz_oku_url("https://status.yildizskylab.com/heartbeat/"), "https://status.yildizskylab.com/heartbeat")
+        self.assertEqual(izle.nabiz_oku_url("https://nabiz.yildizskylab.com"), "https://nabiz.yildizskylab.com/durum")
+        self.assertEqual(izle.nabiz_oku_url("https://nabiz.yildizskylab.com/"), "https://nabiz.yildizskylab.com/durum")
+
+    def test_nabiz_oku_dogru_adresi_ister(self):
+        istenen = []
+
+        def get(url, zaman_asimi=None):
+            istenen.append(url)
+            return 200, b'{"surum":1,"simdi":1,"isler":{}}', {}, ""
+        for taban, beklenen in (("https://status.yildizskylab.com/heartbeat", "https://status.yildizskylab.com/heartbeat"),
+                                ("https://nabiz.yildizskylab.com", "https://nabiz.yildizskylab.com/durum")):
+            d, hata = izle.nabiz_oku(taban, get=get, uyu=lambda s: None)
+            self.assertEqual((d["isler"], hata), ({}, ""))
+            self.assertEqual(istenen[-1], beklenen)
+
+    def test_okunamazsa_alarm_metni_gercek_adresi_soyler(self):
+        def get(url, zaman_asimi=None):
+            return 404, b"yok", {}, ""
+        al, *_ = izle.denetle([], YAPI, "https://status.yildizskylab.com/heartbeat", get=get, tls=lambda *a, **k: 90,
+                              uyu=lambda s: None)
+        m = [a["metin"] for a in al if a["anahtar"] == "nabiz-deposu"]
+        self.assertEqual(len(m), 1)
+        self.assertIn("(https://status.yildizskylab.com/heartbeat) okunamadı: HTTP 404", m[0])
 
 
 if __name__ == "__main__":
