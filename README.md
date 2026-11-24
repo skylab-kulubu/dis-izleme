@@ -1,6 +1,6 @@
 # SKY LAB dış izleme ve durum sayfası
 
-Sunucunun dışından bakan küçük bir izleyici ve herkese açık durum sayfası: **https://durum.yildizskylab.com**.
+Sunucunun dışından bakan küçük bir izleyici ve herkese açık durum sayfası: **https://status.yildizskylab.com**.
 Sunucu, ağı ya da posta yolu tümden düşse de haber verir; sayfa sunuculardan ayrı yerde (Cloudflare) barınır.
 
 ## Hizmet nasıl eklenir (3 adım)
@@ -22,7 +22,7 @@ başlar; `ad`'ı değiştirmek geçmişi korur.
 - **Planlı bakım:** "Planlı bakım" şablonu; `Hizmetler:`, `Başlangıç: 2026-12-01 16:00`, `Bitiş: 2026-12-01 18:00`
   (İstanbul saati). Bakım süresince hizmet "Bakımda" görünür, alarm vermez ve çalışma yüzdesine sayılmaz.
 - Yalnız depo üyelerinin (ve `UYARI_KISILERI`'ndeki kişilerin) açtığı issue'lar ve yazdığı yorumlar sayfaya girer;
-  dışarıdan birinin açtığı issue görünmez. Olaylar ve bakımlar RSS'te: https://durum.yildizskylab.com/olaylar.xml
+  dışarıdan birinin açtığı issue görünmez. Olaylar ve bakımlar RSS'te: https://status.yildizskylab.com/olaylar.xml
 
 ## Ne yapar
 
@@ -31,7 +31,7 @@ başlar; `ad`'ı değiştirmek geçmişi korur.
 1. **Hizmetler:** `hizmetler.yml`'deki adresler. Her biri en çok 3 deneme; beklenen durum kodu, istenirse yanıtta bir metin,
    yanıt süresi (`yavas_ms`'den uzunsa "Yavaş"). Ayrıca TLS sertifikasının kalan günü (14 günün altı alarm).
 2. **Nabız:** sunucudaki zamanlanmış işler (gece yedeği, OpenBao snapshot'ı, sır rotasyonu, saklama/silme alarmları…)
-   her koşudan sonra `https://nabiz.yildizskylab.com`'a "ok" ya da "hata" bildirir; sınırları `izleme.json`'da. Bunlar
+   her koşudan sonra `https://status.yildizskylab.com/heartbeat`'e "ok" ya da "hata" bildirir; sınırları `izleme.json`'da. Bunlar
    sayfada görünmez.
 3. **Uyarı:** sorun varsa `[ALARM] SKY LAB dış izleme` issue'su açılır ve `UYARI_KISILERI` anılır; GitHub bunu e-postayla
    iletir. Sorun sürerse 24 saatte bir hatırlatılır, düzelince kendiliğinden kapanır. Denetimler paralel koşar ve toplam 4

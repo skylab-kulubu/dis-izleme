@@ -6,7 +6,8 @@ GitHub Actions'ta 15 dakikada bir koşar (.github/workflows/izle.yml). Yalnız P
 Girdiler
   hizmetler.yml   denetlenen ve durum sayfasında gösterilen hizmetler (TEK YER; Yusuf GitHub'da düzenler). Bozuksa son geçerli
                   liste (önceki durum.json'daki) kullanılır ve alarm issue'su hatanın satırını söyler.
-  izleme.json     sunucudaki zamanlanmış işlerin nabız sınırları (sayfada görünmez), nabız deposu adresi, sertifika eşiği.
+  izleme.json     sunucudaki zamanlanmış işlerin nabız sınırları (sayfada görünmez), nabız deposu adresi
+                  (https://status.yildizskylab.com/heartbeat), sertifika eşiği.
   ONCEKI_DURUM    önceki durum.json (veri dalından; yoksa ilk koşu).
   GECMIS_OKUNAMADI=1  veri dalı var ama okunamadı (veri-oku.sh). Denetim ve alarm yine yapılır; geçmiş ve sayfa verisi
                   yazılmaz (yayinla=hayir), çıkış 1. ONCEKI_DURUM var ama bozuksa da aynısı.
@@ -52,7 +53,7 @@ BOT = "github-actions[bot]"
 YETKILI_ILISKI = {"OWNER", "MEMBER", "COLLABORATOR"}
 GUN_SAYISI = 90
 YAYIN_EN_GEC_SN = 55 * 60
-SAYFA_URL = "https://durum.yildizskylab.com"
+SAYFA_URL = "https://status.yildizskylab.com"
 KISI_RE = re.compile(r"^@[A-Za-z0-9](?:[A-Za-z0-9-]{0,38})(?:/[A-Za-z0-9._-]{1,100})?$")
 # Zamanlar (sn). Testler küçültür; oranlar aynı kalır.
 ZAMAN = {"http_zaman_asimi": 20, "http_ara": 15, "http_deneme": 3, "tls_zaman_asimi": 15, "butce": 240}
@@ -316,8 +317,16 @@ def sertifika_gun(host, port=443, zaman_asimi=15):
     return (bitis - time.time()) / 86400
 
 
+def nabiz_oku_url(url):
+    """Nabız özetinin adresi. Yeni taban (…/heartbeat) kendisi okunur; eski taban (https://nabiz.yildizskylab.com) için
+    /durum eklenir: depo değişkeni NABIZ_URL ile Worker'ın geçişi hangi sırayla olursa olsun okuma kopmaz (wizard --eski-sil'e
+    kadar eski ad da yayında)."""
+    url = url.rstrip("/")
+    return url if url.endswith("/heartbeat") else url + "/durum"
+
+
 def nabiz_oku(url, get=http_get, uyu=time.sleep, bitis=None):
-    """Nabız deposunun /durum'u: (durum_sözlüğü | None, hata_metni). En çok 3 deneme, bütçe içinde."""
+    """Nabız deposunun özeti (nabiz_oku_url): (durum_sözlüğü | None, hata_metni). En çok 3 deneme, bütçe içinde."""
     if bitis is None:
         bitis = time.monotonic() + ZAMAN["butce"]
     hata_m = "süre sınırı"
@@ -325,7 +334,7 @@ def nabiz_oku(url, get=http_get, uyu=time.sleep, bitis=None):
         k = kalan(bitis)
         if k <= 0:
             break
-        kod, govde, _, hata = get(url + "/durum", zaman_asimi=min(ZAMAN["http_zaman_asimi"], k))
+        kod, govde, _, hata = get(nabiz_oku_url(url), zaman_asimi=min(ZAMAN["http_zaman_asimi"], k))
         if kod == 200:
             try:
                 return json.loads(govde.decode("utf-8")), ""
@@ -343,7 +352,7 @@ def nabiz_oku(url, get=http_get, uyu=time.sleep, bitis=None):
 # ── Nabız (sunucudaki zamanlanmış işler; sayfada görünmez) ─────────────────────────────────────────────────────────────
 
 def nabiz_degerlendir(durum, yapi, simdi):
-    """durum: Worker'ın /durum JSON'u. Dönüş: (alarmlar[{anahtar, metin}], satırlar[tablo], bağlı olmayanlar[ad])."""
+    """durum: Worker'ın /heartbeat JSON'u. Dönüş: (alarmlar[{anahtar, metin}], satırlar[tablo], bağlı olmayanlar[ad])."""
     alarmlar, satirlar = [], []
     isler = durum.get("isler") or {}
     tanimli = yapi.get("nabiz") or {}
@@ -834,7 +843,7 @@ def denetle(hizmetler, yapi, nabiz_url, get=http_get, tls=sertifika_gun, uyu=tim
     durum, depo_hata = (f_nabiz.result() if f_nabiz.done() and not f_nabiz.cancelled() else (None, "süre sınırı"))
     nabiz_satir, bagli_degil = [], []
     if durum is None:
-        alarmlar.append({"anahtar": "nabiz-deposu", "metin": f"Nabız deposu ({nabiz_url}/durum) okunamadı: {depo_hata}"})
+        alarmlar.append({"anahtar": "nabiz-deposu", "metin": f"Nabız deposu ({nabiz_oku_url(nabiz_url)}) okunamadı: {depo_hata}"})
     else:
         depo_hata = ""
         n_alarm, nabiz_satir, bagli_degil = nabiz_degerlendir(durum, yapi, int(simdi or time.time()))
