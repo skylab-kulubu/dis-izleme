@@ -37,9 +37,13 @@
     var d = new Date(gun + 'T12:00:00Z');
     return d.getUTCDate() + ' ' + AYLAR[d.getUTCMonth()] + ' ' + d.getUTCFullYear() + ', ' + GUNLER[d.getUTCDay()];
   }
-  function tamZaman(t) { var d = ist(t); return d.getUTCDate() + ' ' + AYLAR[d.getUTCMonth()] + ' ' + d.getUTCFullYear() + ', ' + saatDk(t); }
   function isoIst(t) { var d = ist(t); return d.toISOString().slice(0, 16) + '+03:00'; }
   function yuzde(y) { return y == null ? '—' : '%' + (y >= 99.995 ? '100' : y.toFixed(2).replace('.', ',')); }
+  // Dar ekranda çubuk son 30 günü gösterir; yüzde de o 30 günün (izle.py'deki 90 günlük gibi günlük yüzdelerin ortalaması).
+  function ortalama(gunler) {
+    var y = gunler.filter(function (g) { return g.y != null; });
+    return y.length ? Math.round(1000 * y.reduce(function (t, g) { return t + g.y; }, 0) / y.length) / 1000 : null;
+  }
   function simge(id) { return '<svg aria-hidden="true"><use href="#' + id + '"/></svg>'; }
   function birlestir(l) { return l.length < 2 ? l.join('') : l.slice(0, -1).join(', ') + ' ve ' + l[l.length - 1]; }
 
@@ -49,9 +53,9 @@
     h.gunler.forEach(function (g) { if (sorunlu[g.d]) sorunlu[g.d].push(g.g); });
     function adlar(l) { return l.map(function (g) { var d = new Date(g + 'T12:00:00Z'); return d.getUTCDate() + ' ' + AY_KISA[d.getUTCMonth()]; }).join(', '); }
     var p = [];
-    if (sorunlu.kesinti.length) p.push('<b>Kesinti:</b> ' + adlar(sorunlu.kesinti));
-    if (sorunlu.yavas.length) p.push('<b>Yavaş:</b> ' + adlar(sorunlu.yavas));
-    if (sorunlu.bakim.length) p.push('<b>Bakım:</b> ' + adlar(sorunlu.bakim));
+    if (sorunlu.kesinti.length) p.push('Kesinti: ' + adlar(sorunlu.kesinti));
+    if (sorunlu.yavas.length) p.push('Yavaş: ' + adlar(sorunlu.yavas));
+    if (sorunlu.bakim.length) p.push('Bakım: ' + adlar(sorunlu.bakim));
     var id = kac(h.kimlik);
     return '<li class="hizmet" data-kimlik="' + id + '">' +
       '<div class="hizmet-bas">' +
@@ -59,12 +63,13 @@
         '<span class="etiket ' + D.sinif + '">' + simge(D.simge) + D.ad + '</span>' +
       '</div>' +
       '<div class="cubuk" id="cubuk-' + id + '" tabindex="0" role="group" ' +
-        'aria-label="' + kac(h.ad) + ', son 90 gün. Oklarla günleri gezin." aria-describedby="oz-' + id + '">' +
+        'aria-label="' + kac(h.ad) + ', son 90 gün. Sol/sağ ok: gün" aria-describedby="oz-' + id + '">' +
         h.gunler.map(function (g, i) { return '<span class="gun" data-d="' + kac(g.d) + '" data-i="' + i + '"></span>'; }).join('') +
       '</div>' +
       '<div class="cubuk-alt"><span><span class="kisa90">90 gün önce</span><span class="kisa30">30 gün önce</span></span>' +
-        '<span class="yuzde">90 günde ' + yuzde(h.yuzde) + '</span><span>Bugün</span></div>' +
-      '<p class="ozet-satir" id="oz-' + id + '">' + (p.length ? p.join(' · ') : 'Son 90 günde sorun yok.') + '</p>' +
+        '<span class="yuzde"><span class="kisa90">' + yuzde(h.yuzde) + '</span><span class="kisa30">' + yuzde(ortalama(h.gunler.slice(-30))) +
+        '</span> çalışma süresi</span><span>Bugün</span></div>' +
+      '<p class="gizli" id="oz-' + id + '">' + (p.length ? p.join('. ') : 'Sorun yok') + '</p>' +
     '</li>';
   }
 
@@ -79,7 +84,7 @@
   }
 
   function listeHtml(hizmetler) {
-    if (!hizmetler.length) return '<p class="bekle">Gösterilecek hizmet yok.</p>';
+    if (!hizmetler.length) return '<p class="bekle">Hizmet yok</p>';
     var g = gruplar(hizmetler);
     return g.map(function (x) {
       return '<div class="grup">' + (g.length > 1 ? '<h3 class="grup-ad">' + kac(x.ad) + '</h3>' : '') +
@@ -92,12 +97,12 @@
     var k = adlar('kesinti'), y = adlar('yavas'), b = adlar('bakim');
     var suren = olaylar.filter(function (o) { return o.tur === 'olay' && o.durum === 'suruyor'; });
     var c = [], ust = 'ok';
-    if (k.length) { c.push(birlestir(k) + ' çalışmıyor.'); ust = 'kesinti'; }
-    else if (suren.length) { c.push('Süren bir olay var: ' + suren[0].baslik + '.'); ust = 'kesinti'; }
-    if (y.length) { c.push(birlestir(y) + ' yavaş.'); if (ust === 'ok') ust = 'yavas'; }
-    if (b.length) { c.push(birlestir(b) + ' planlı bakımda.'); if (ust === 'ok') ust = 'bakim'; }
-    if (!c.length) c.push(hizmetler.length ? 'Bütün hizmetler çalışıyor.' : 'Henüz veri yok.');
-    return { durum: ust, metin: c.join(' ') };
+    if (k.length) { c.push(birlestir(k) + ' çalışmıyor'); ust = 'kesinti'; }
+    else if (suren.length) { c.push('Süren olay: ' + suren[0].baslik); ust = 'kesinti'; }
+    if (y.length) { c.push(birlestir(y) + ' yavaş'); if (ust === 'ok') ust = 'yavas'; }
+    if (b.length) { c.push(birlestir(b) + ' bakımda'); if (ust === 'ok') ust = 'bakim'; }
+    if (!c.length) c.push(hizmetler.length ? 'Tüm sistemler çalışıyor' : 'Veri yok');
+    return { durum: ust, metin: c.join(' · ') };
   }
 
   function olayHtml(o) {
@@ -130,7 +135,7 @@
     while (y > bas.getUTCFullYear() || (y === bas.getUTCFullYear() && a >= bas.getUTCMonth())) {
       var bu = gecmis.filter(function (o) { var b = ist(o.bas); return b.getUTCFullYear() === y && b.getUTCMonth() === a; });
       out += '<div class="ay"><h3 class="ay-ad">' + AYLAR[a] + ' ' + y + '</h3>' +
-        (bu.length ? bu.map(olayHtml).join('') : '<p class="bos">Olay yok.</p>') + '</div>';
+        (bu.length ? bu.map(olayHtml).join('') : '<p class="bos">Olay yok</p>') + '</div>';
       a -= 1; if (a < 0) { a = 11; y -= 1; }
     }
     return out;
@@ -152,28 +157,26 @@
     var D = DURUM[g.d] || DURUM.veriyok;
     return {
       html: '<div class="t">' + uzunTarih(g.g) + '</div>' +
-        '<div class="e">' + simge(D.simge) + D.ad + (g.y != null ? ' · ' + yuzde(g.y) + ' çalıştı' : '') + '</div>' +
+        '<div class="e">' + simge(D.simge) + D.ad + (g.y != null ? ' · ' + yuzde(g.y) : '') + '</div>' +
         (g.n ? '<div class="n">' + kac(g.n) + '</div>' : ''),
-      duyuru: h.ad + ', ' + uzunTarih(g.g) + ': ' + D.ad + (g.y != null ? ', ' + yuzde(g.y) + ' çalıştı' : '') + (g.n ? '. ' + g.n : ''),
+      duyuru: h.ad + ', ' + uzunTarih(g.g) + ': ' + D.ad + (g.y != null ? ', ' + yuzde(g.y) : '') + (g.n ? '. ' + g.n : ''),
       sinif: D.sinif
     };
   }
 
   var api = { kac: kac, hizmetHtml: hizmetHtml, listeHtml: listeHtml, gruplar: gruplar, genelDurum: genelDurum, olayHtml: olayHtml,
-              gecmisHtml: gecmisHtml, ipucuKonum: ipucuKonum, ipucuMetni: ipucuMetni, yuzde: yuzde, DURUM: DURUM };
+              gecmisHtml: gecmisHtml, ortalama: ortalama, ipucuKonum: ipucuKonum, ipucuMetni: ipucuMetni, yuzde: yuzde, DURUM: DURUM };
   if (typeof module !== 'undefined' && module.exports) { module.exports = api; return; }
   if (typeof document === 'undefined') return;
 
   /* ---------- Tema ---------- */
   var belge = document.documentElement;
   var temaBtn = document.getElementById('tema');
-  var temaYazi = document.getElementById('tema-yazi');
   function sistemKoyu() { return !kok.matchMedia || !kok.matchMedia('(prefers-color-scheme: light)').matches; }
   function etkinTema() { return belge.getAttribute('data-theme') || (sistemKoyu() ? 'dark' : 'light'); }
   function temaDugmesi() {
     var t = etkinTema();
-    temaYazi.textContent = t === 'dark' ? 'Açık tema' : 'Koyu tema';
-    temaBtn.setAttribute('aria-label', t === 'dark' ? 'Açık temaya geç' : 'Koyu temaya geç');
+    temaBtn.setAttribute('aria-label', t === 'dark' ? 'Açık tema' : 'Koyu tema');
   }
   try { var kayitli = localStorage.getItem('durum-tema'); if (kayitli === 'light' || kayitli === 'dark') belge.setAttribute('data-theme', kayitli); } catch (e) {}
   var adresTema = new URLSearchParams(location.search).get('tema');
@@ -200,12 +203,10 @@
     genel.className = 'genel ' + DURUM[g.durum].sinif;
     document.getElementById('genel-baslik').textContent = g.metin;
     document.getElementById('genel-simge').innerHTML = '<use href="#' + DURUM[g.durum].simge + '"/>';
-    document.getElementById('genel-alt').innerHTML = 'Son güncelleme <time datetime="' + isoIst(veri.guncelleme) + '">' +
-      tamZaman(veri.guncelleme) + '</time> · Denetimler 15 dakikada bir; durum değişince sayfa hemen güncellenir.';
     var eski = document.getElementById('eski');
     if (simdi - veri.guncelleme > 2 * 3600) {
       eski.hidden = false;
-      eski.textContent = 'Bu veriler ' + Math.round((simdi - veri.guncelleme) / 3600) + ' saat önce güncellendi; denetim gecikiyor olabilir.';
+      eski.textContent = 'Son güncelleme ' + Math.round((simdi - veri.guncelleme) / 3600) + ' saat önce';
     }
     var suren = olaylar.filter(function (o) { return o.tur === 'olay' && o.durum === 'suruyor'; });
     document.getElementById('suren-bolum').hidden = !suren.length;
@@ -279,5 +280,5 @@
   fetch('/sayfa.json', { cache: 'no-store' })
     .then(function (r) { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
     .then(goster)
-    .catch(function () { hata('Durum verisi şu an alınamadı. Birkaç dakika sonra yeniden deneyin.'); });
+    .catch(function () { hata('Durum alınamadı'); });
 })(typeof window !== 'undefined' ? window : this);

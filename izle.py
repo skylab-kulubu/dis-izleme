@@ -527,8 +527,8 @@ def rss(olaylar, simdi):
             f"<description>{xml_escape(aciklama)}</description>"
             "</item>")
     return ('<?xml version="1.0" encoding="utf-8"?>\n<rss version="2.0"><channel>'
-            "<title>SKY LAB Durum: olaylar ve bakımlar</title>"
-            f"<link>{SAYFA_URL}/</link><description>SKY LAB hizmetlerinin olayları ve planlı bakımları</description>"
+            "<title>SKY LAB Durum</title>"
+            f"<link>{SAYFA_URL}/</link><description>Olaylar ve planlı bakımlar</description>"
             f"<language>tr</language><lastBuildDate>{zaman(simdi)}</lastBuildDate>"
             + "".join(ogeler) + "</channel></rss>\n")
 
@@ -556,7 +556,7 @@ def gun_ozeti(kim, h, durum, olaylar, simdi):
         if kap <= 0 and bas <= ilk <= son:
             kap = 1  # izleme bu gün, bu koşuda başladı: ilk örnek gösterilir
         if kap <= 0:
-            gunler.append({"g": gun, "d": "veriyok", "y": None, "k": 0, "ms": None, "n": "Bu hizmet o gün henüz izlenmiyordu."})
+            gunler.append({"g": gun, "d": "veriyok", "y": None, "k": 0, "ms": None, "n": ""})
             continue
         bak = sum(_kesisim(max(bas, ilk), son, b1, b2) for b1, b2 in bakimlar)
         kes = 0
@@ -570,9 +570,9 @@ def gun_ozeti(kim, h, durum, olaylar, simdi):
         y = round(100.0 * (1 - kes / etkin), 3) if etkin > 0 else 100.0
         kdk = int(round(kes / 60))
         if kdk >= 1:
-            d, n = "kesinti", f"{kdk} dakika kesinti"
+            d, n = "kesinti", f"{kdk} dakika"
         elif bak > 0:
-            d, n = "bakim", "Planlı bakım"
+            d, n = "bakim", ""
         elif ms is not None and ms > h["yavas_ms"]:
             d, n = "yavas", f"Ortalama yanıt {ms / 1000:.1f} sn".replace(".", ",")
         else:

@@ -130,9 +130,15 @@ async function durum(istek, env, ctx) {
   return r;
 }
 
+// durum. adındaki her yanıt: güvenlik başlıkları. Yalnız HTML yanıtında cache-control'a no-transform (Cloudflare e-posta
+// gizleme vb. HTML'i değiştirmesin; wizard --sayfa yayındaki index.html'i hub kopyasıyla bayt bayt karşılaştırır). JSON, XML,
+// JS ve düz metinde yok: no-transform Cloudflare'in sıkıştırmasını da kapatır.
 function guvenli(r) {
   const y = new Response(r.body, r);
   for (const [k, v] of Object.entries(GUVENLIK)) y.headers.set(k, v);
+  const cc = y.headers.get("cache-control");
+  const html = /^text\/html\b/i.test(y.headers.get("content-type") || "");
+  if (html && !/\bno-transform\b/.test(cc || "")) y.headers.set("cache-control", cc ? cc + ", no-transform" : "no-transform");
   return y;
 }
 
@@ -154,9 +160,9 @@ async function veri(yol, env) {
 }
 
 async function durumSayfasi(istek, env, u) {
-  if (istek.method !== "GET" && istek.method !== "HEAD") return yanit("yok\n", 405);
+  if (istek.method !== "GET" && istek.method !== "HEAD") return guvenli(yanit("yok\n", 405));
   if (VERI_DOSYALARI[u.pathname]) return veri(u.pathname, env);
-  if (!env.ASSETS) return yanit("sayfa dosyaları yok\n", 503);
+  if (!env.ASSETS) return guvenli(yanit("sayfa dosyaları yok\n", 503));
   return guvenli(await env.ASSETS.fetch(istek));
 }
 
