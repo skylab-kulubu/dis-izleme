@@ -25,7 +25,7 @@ def anahtarlar(alarmlar):
 class Hizmetler(unittest.TestCase):
     def test_depodaki_dosya_gecerli(self):
         kimlikler = [h["kimlik"] for h in HIZ]
-        self.assertEqual(kimlikler, ["site", "etkinlik", "kisa", "giris", "hesap", "panel", "skymail", "forms", "api"])
+        self.assertEqual(kimlikler, ["site", "etkinlik", "kisa", "giris", "hesap", "panel", "skynotify", "forms", "api"])
         giris = next(h for h in HIZ if h["kimlik"] == "giris")
         self.assertEqual(giris["metin"], '"issuer":"https://e.yildizskylab.com/realms/e-skylab"')
         self.assertTrue(all(h["adres"].startswith("https://") for h in HIZ))
@@ -231,8 +231,8 @@ class Olcekli(unittest.TestCase):
 
     def test_bakimdaki_hizmet_alarm_vermez(self):
         al, _, _, _, _, _ = izle.denetle(HIZ, YAPI, YAPI["nabiz_url"], get=self.kara_delik, tls=self.tls_kara_delik,
-                                          uyu=time.sleep, bakimda={"skymail"})
-        self.assertNotIn("http:skymail", {a["anahtar"] for a in al})
+                                          uyu=time.sleep, bakimda={"skynotify"})
+        self.assertNotIn("http:skynotify", {a["anahtar"] for a in al})
         self.assertIn("http:api", {a["anahtar"] for a in al})
 
 
@@ -289,12 +289,12 @@ class Olaylar(unittest.TestCase):
 
     def test_bakim_durumlari(self):
         def bakim(bas, son, **k):
-            b = f"Hizmetler: SkyMail\nBaşlangıç: {bas}\nBitiş: {son}\nPosta sunucusu güncellenecek."
-            return self.issue(labels=[{"name": "bakim"}], body=b, title="SkyMail güncellemesi", **k)
+            b = f"Hizmetler: SkyNotify\nBaşlangıç: {bas}\nBitiş: {son}\nBildirim servisi güncellenecek."
+            return self.issue(labels=[{"name": "bakim"}], body=b, title="SkyNotify güncellemesi", **k)
         simdi = izle._ist_zaman("2026-11-24 17:00")
         o = izle.olay_ayristir(bakim("2026-11-24 16:00", "2026-11-24 18:00"), [], HIZ, simdi, set())
-        self.assertEqual((o["tur"], o["durum"], o["hizmetler"]), ("bakim", "suruyor", ["skymail"]))
-        self.assertEqual(izle.bakimdakiler([o], simdi), {"skymail"})
+        self.assertEqual((o["tur"], o["durum"], o["hizmetler"]), ("bakim", "suruyor", ["skynotify"]))
+        self.assertEqual(izle.bakimdakiler([o], simdi), {"skynotify"})
         o = izle.olay_ayristir(bakim("2026-11-25 16:00", "2026-11-25 18:00"), [], HIZ, simdi, set())
         self.assertEqual(o["durum"], "planlandi")
         self.assertEqual(o["adimlar"][-1]["asama"], "Planlandı")
@@ -304,7 +304,7 @@ class Olaylar(unittest.TestCase):
     def test_sablon_govdesi(self):
         sablon = open(os.path.join(KOK, ".github", "ISSUE_TEMPLATE", "bakim.md"), encoding="utf-8").read().split("---", 2)[2]
         meta, aciklama = izle.govde_ayristir(sablon)
-        self.assertEqual((meta["hizmetler"], meta["baslangic"], meta["bitis"]), ("SkyMail", "2026-12-01 16:00", "2026-12-01 18:00"))
+        self.assertEqual((meta["hizmetler"], meta["baslangic"], meta["bitis"]), ("SkyNotify", "2026-12-01 16:00", "2026-12-01 18:00"))
         self.assertNotIn("Saatler", aciklama)
         self.assertTrue(aciklama.startswith("Ne yapılacak"))
         meta, aciklama = izle.govde_ayristir(open(os.path.join(KOK, ".github", "ISSUE_TEMPLATE", "olay.md"), encoding="utf-8").read().split("---", 2)[2])
@@ -355,11 +355,11 @@ class Gecmis(unittest.TestCase):
         self.assertLess(api["yuzde"], 100)
 
     def test_bakim_suresi_kesinti_sayilmaz(self):
-        bakim = {"no": 3, "tur": "bakim", "durum": "suruyor", "hizmetler": ["skymail"], "hizmet_adlari": ["SkyMail"],
+        bakim = {"no": 3, "tur": "bakim", "durum": "suruyor", "hizmetler": ["skynotify"], "hizmet_adlari": ["SkyNotify"],
                  "bas": T - 2 * SA, "son": T + SA, "guncelleme": T - 2 * SA, "baslik": "b", "adimlar": []}
         d0, _, _ = izle.durum_guncelle(None, HIZ, self.sonuc("ok"), [], T - 3 * SA, "")
         d1, _, _ = izle.durum_guncelle(d0, HIZ, self.sonuc("kesinti"), [bakim], T - SA, "")
-        sm = next(h for h in d1["sayfa"]["hizmetler"] if h["kimlik"] == "skymail")
+        sm = next(h for h in d1["sayfa"]["hizmetler"] if h["kimlik"] == "skynotify")
         self.assertEqual(sm["simdi"], "bakim")
         self.assertEqual(sm["gunler"][-1]["k"], 0)
         api = next(h for h in d1["sayfa"]["hizmetler"] if h["kimlik"] == "api")

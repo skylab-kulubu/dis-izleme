@@ -74,11 +74,11 @@ hizmetler:
     beklenen: [200]
     yavas_ms: 2000
 
-  - kimlik: skymail
-    ad: SkyMail
+  - kimlik: skynotify
+    ad: SkyNotify
     grup: Uygulamalar
     sira: 70
-    adres: https://api.yildizskylab.com/api/skymail/ready
+    adres: https://api.yildizskylab.com/api/skynotify/ready
     beklenen: [200, 204]
     yavas_ms: 2000
 
