@@ -15,7 +15,7 @@
     "skylab-erisim-kaydi-bekci":       {"en_cok_saat": 3,   "hata_bekle_dk": 75},
     "skylab-retention-alarm":          {"en_cok_saat": 3,   "hata_bekle_dk": 75},
     "skylab-erasure-alarm":            {"en_cok_saat": 3,   "hata_bekle_dk": 75},
-    "skylab-skymail-mask-alarm":       {"en_cok_saat": 3,   "hata_bekle_dk": 75},
+    "skylab-skynotify-mask-alarm":     {"en_cok_saat": 3,   "hata_bekle_dk": 75},
     "skylab-keycloak-acil-izle":       {"en_cok_saat": 6,   "hata_bekle_dk": 30},
     "skylab-keycloak-alarm-bekci":     {"en_cok_saat": 14,  "hata_bekle_dk": 0},
     "skylab-keycloak-sapma-alarm":     {"en_cok_saat": 27,  "hata_bekle_dk": 0},

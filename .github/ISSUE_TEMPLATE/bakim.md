@@ -4,7 +4,7 @@ about: Önceden duyurulan bakım. Süresince hizmet "Bakımda" görünür, alarm
 title: ""
 labels: bakim
 ---
-Hizmetler: SkyMail
+Hizmetler: SkyNotify
 Başlangıç: 2026-12-01 16:00
 Bitiş: 2026-12-01 18:00
 
