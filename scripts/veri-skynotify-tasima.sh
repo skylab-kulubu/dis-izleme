@@ -82,7 +82,7 @@ fi
 if [[ $KIP == uygula ]]; then
   command -v gh >/dev/null || dur "gh yok."
   [[ -n $DEPO ]] || dur "depo adı origin'den çıkarılamadı ($URL); DIS_IZLEME_DEPO=sahip/ad ver."
-  DURUM=$(gh workflow view "$IS_AKISI" -R "$DEPO" --json state -q .state 2>/dev/null) || dur "gh: $IS_AKISI okunamadı (gh auth status?)."
+  DURUM=$(gh api "repos/$DEPO/actions/workflows/$IS_AKISI" --jq .state 2>/dev/null) || dur "gh: $IS_AKISI okunamadı (gh auth status?)."
   if [[ $DURUM == active ]]; then
     gh workflow disable "$IS_AKISI" -R "$DEPO" >/dev/null 2>&1 || dur "gh: $IS_AKISI kapatılamadı."
     ACILACAK=1
